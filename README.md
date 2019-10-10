@@ -1,0 +1,2 @@
+# logicboi
+Bada tautologiczność zdań
