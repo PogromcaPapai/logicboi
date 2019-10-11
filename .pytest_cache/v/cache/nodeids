@@ -1,0 +1,7 @@
+[
+  "logicboi_test.py::TestNegation::test_true",
+  "logicboi_test.py::TestNegation::test_false",
+  "logicboi_test.py::TestNegation::test_additional",
+  "logicboi_test.py::TestConjunction::test_truextrue",
+  "logicboi_test.py::TestConjunction::test_additional"
+]
