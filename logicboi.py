@@ -92,31 +92,34 @@ def strip_options(_list):
     return main_command, options, sentence
 
 
-def strip(_list, value_dict):
+def strip(_list, value_dict): #TODO: Nie działa kompletnie; zrobić tak, aby komputer najpierw poszukiwał spójników?
     ''' Converts a `list` into a data tree '''
     brackets = 0
-    for i in range(_list):
+    for i in range(len(_list)):
         for j in _list[i]:
             if j=='(':
                 brackets += 1
             elif j==')':
                 brackets -= 1
-        i_clone = _list[i][:]
-        i_clone.replace('(', ''); i_clone.replace(')', '') #Bracket deletion
-        if i_clone in SYNTAX_DICT.keys() and brackets == 1:
-            arg_amount = SYNTAX_DICT[i_clone]('', None).arg_number
+        name = _list[i][:]
+        name = name.replace('(', '').replace(')', '') #Bracket deletion
+        if name in SYNTAX_DICT.keys() and brackets in [0, 1]:
+            arg_amount = SYNTAX_DICT[name]('', None, None, None).arg_number
             if arg_amount == 1:
-                part1 = strip(_list[i+1:], value_dict)
-                return SYNTAX_DICT[i_clone]('', None, part1)
+                part1 = strip(_list[i:], value_dict)
+                return SYNTAX_DICT[name]('', None, part1)
             elif arg_amount == 2:
-                part1 = strip(_list[i+1:], value_dict)
-                part2 = strip(_list[:i-1], value_dict)
-                return SYNTAX_DICT[i_clone]('', None, part1, part2)
+                part1 = strip(_list[i:], value_dict)
+                part2 = strip(_list[:i], value_dict)
+                return SYNTAX_DICT[name]('', None, part1, part2)
             else:
                 raise Exception('This version doesn\'t support this amount of arguments')
-        elif i_clone in value_dict.keys():
-            return Sentence(i_clone, value_dict[i_clone])
+        elif name in value_dict.keys():
+            return Sentence(name, value_dict[name])
 
 ############### __main__ ###############
 if __name__ == "__main__":
-    pass
+    _dict = {'p':True,'q':False}
+    zdanie = '(p and q)'
+    wynik = strip(zdanie.split(), _dict)
+    print(wynik.evaluate())
