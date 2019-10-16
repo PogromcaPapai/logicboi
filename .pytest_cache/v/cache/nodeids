@@ -3,5 +3,18 @@
   "logicboi_test.py::TestNegation::test_false",
   "logicboi_test.py::TestNegation::test_additional",
   "logicboi_test.py::TestConjunction::test_truextrue",
-  "logicboi_test.py::TestConjunction::test_additional"
+  "logicboi_test.py::TestConjunction::test_falsextrue",
+  "logicboi_test.py::TestConjunction::test_truexfalse",
+  "logicboi_test.py::TestConjunction::test_falsexfalse",
+  "logicboi_test.py::TestConjunction::test_additional",
+  "logicboi_test.py::TestAlternative::test_truextrue",
+  "logicboi_test.py::TestAlternative::test_falsextrue",
+  "logicboi_test.py::TestAlternative::test_truexfalse",
+  "logicboi_test.py::TestAlternative::test_falsexfalse",
+  "logicboi_test.py::TestAlternative::test_additional",
+  "logicboi_test.py::TestImplication::test_truextrue",
+  "logicboi_test.py::TestImplication::test_falsextrue",
+  "logicboi_test.py::TestImplication::test_truexfalse",
+  "logicboi_test.py::TestImplication::test_falsexfalse",
+  "logicboi_test.py::TestImplication::test_additional"
 ]
