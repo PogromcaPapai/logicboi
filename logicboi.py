@@ -1,5 +1,7 @@
 from functools import reduce
 
+############### Back End ###############
+
 class Sentence(object):
     truth_table = dict()
     arg_number = 0
@@ -36,9 +38,9 @@ class Sentence(object):
             self.value = reduce(lambda x, y: x[y.evaluate()], self.args, self.truth_table)
         return self.value
 
-######
-### Functor definitions 
-######
+###
+# Functor definitions 
+###
 
 Verum = Sentence("T", True)
 Falsum = Sentence("F", False)
@@ -58,6 +60,12 @@ class Alternative(Sentence):
 class Implication(Sentence):
     truth_table = {True:{False:False, True:True}, False:{False:True, True:True}}
     arg_number = 2
+
+############### Front End ###############
+
+
+
+############### __main__ ###############
 
 if __name__ == "__main__":
     test1 = Sentence('', True)
