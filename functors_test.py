@@ -20,7 +20,7 @@ class TestNegation:
 
     def test_additional(self):
         with pytest.raises(TypeError):
-            logicboi.Negation(logicboi.Sentence('', None), logicboi.Sentence('', None))
+            logicboi.Negation('', None, logicboi.Sentence('', None), logicboi.Sentence('', None))
 
 class TestConjunction:
 
