@@ -22,16 +22,25 @@ class Sentence(object):
         super().__init__()
         self.string = string
         self.value = value
-        if not self.arg_number == len(args):
+        new_args = self.clear_args(args)
+        if not self.arg_number == len(new_args):
             raise TypeError(
                 "This amount of arguments is not allowed here")
-        self.args = args
+        self.args = new_args
 
     def __repr__(self):
         return "{0} [{1}]".format(self.string, self.value)
 
     def __str__(self):
         return self.string
+
+    @staticmethod
+    def clear_args(args):
+        new = []
+        for i in args:
+            if i!=None:
+                new.append(i)
+        return new
 
     def evaluate(self):
         ''' Evaluates the value of the sentence '''
@@ -73,7 +82,7 @@ class Implication(Sentence):
 
 TREE_DICT = {'and': Conjunction, 'or': Alternative, 'not': Negation, 'imp': Implication}
 
-############### Front End ###############
+############### Low-Level Front End ###############
 
 SYNTAX_DICT = {'oraz':'and', '&':'and', 
                'lub':'or', '+':'or', 
@@ -87,13 +96,14 @@ def cut(sentence, val):
     right[-1] = right[-1].replace(")","", 1)
     ### LEFT  ###
     left = sentence[:val]
-    left[0] = left[0].replace("(","", 1)
-    left[-1] = left[-1].replace(")","", 1)
+    if val>0:
+        left[0] = left[0].replace("(","", 1)
+        left[-1] = left[-1].replace(")","", 1)
     return left, right
 
-def strip_options(_list):
+def strip_options(command):
     option_pattern = re.compile(r'^[-]{2}.+')
-    main_command, sentence = _list
+    main_command, sentence = command
     options = []
     for word in sentence[:]:
         if option_pattern.match(word):
@@ -109,7 +119,7 @@ def syntax_analysis(sentence):
         new.append(i)
     return new
 
-def into_prefix(sentence, value_list, infix_functors = ['and','or','imp']):
+def into_prefix(sentence, value_list, infix_functors = ['and','or','imp'], prefix_functors = ['not']):
     ''' Converts the sentence (list of words) into a prefix notation '''
     brackets = 0
     for i in range(len(sentence)):
@@ -121,42 +131,31 @@ def into_prefix(sentence, value_list, infix_functors = ['and','or','imp']):
                 right = into_prefix(new[1], value_list, infix_functors = infix_functors)
                 left = into_prefix(new[0], value_list, infix_functors = infix_functors)
                 return [sentence[i]]+left+right
+            elif sentence[i] in prefix_functors and brackets==0:
+                new = cut(sentence, 0)
+                right = into_prefix(new[1], value_list, prefix_functors = prefix_functors)
+                return [sentence[i]]+right
     return sentence
 
-def strip(_list, value_dict, isreversed=False):
-    ''' Converts a `list` into a data tree 
-        DO NOT USE'''
-    names = []
-    for i in _list:
-        name = i[:]
-        name = name.replace('(', '').replace(')', '')
-        names.append(name)
-    if len(names) == 1 and names[0] in value_dict.keys():
-        return Sentence(names[0], value_dict[names[0]])
-    else:
-        brackets = 0
-        for i in range(len(_list)):
-            brackets += _list[i].count("(") * (-1)**isreversed
-            brackets -= _list[i].count(")") * (-1)**isreversed
-            if brackets <= 1 and names[i] in TREE_DICT.keys():
-                if TREE_DICT[names[i]]==Negation:
-                    if isreversed:
-                        _list.reverse() 
-                    right = strip(_list[i+1:], value_dict) # nie działa rozpisywanie segmentu ((not p) or
-                    return Negation('not '+str(right), None, right)
-                else:
-                    leftlist = _list[0:i]; leftlist.reverse() # Creating a list for objects on the left side of the functor
-                    left = strip(leftlist, value_dict, isreversed=True)
-                    right = strip(_list[i+1:], value_dict)
-                    return TREE_DICT[names[i]](str(right)+" "+names[i]+" "+str(left), None, left, right)
+def _recurparse(sentence, var_dict):
+    ''' 
+        USE `parse` INSTEAD OF THIS'''
+    symbol = TREE_DICT.get(sentence[0], Sentence)
+    args = []
+    new_sentence = sentence[1:]
+    name = " ".join(sentence)
+    for i in range(symbol.arg_number):
+        arg, new_sentence = _recurparse(new_sentence, var_dict)
+        args.append(arg)
+    return symbol(name, var_dict.get(sentence[0], None), *args), new_sentence
 
-
+def parse(sentence, var_dict):
+    return _recurparse(sentence, var_dict)[0]
 
 ############### __main__ ###############
 if __name__ == "__main__":
     for _dict in [{'p':False,'q':True}, {'p':True,'q':True}, {'p':False,'q':False}, {'p':True,'q':False}]:
-        zdanie = '(p and q) -> ((not p) or (not q))' #nie działa xD
-        #wynik = strip(zdanie.split(), _dict)
-        #print(wynik.evaluate())
-        print(into_prefix(syntax_analysis(zdanie.split()), _dict))
-        break
+        zdanie = '(not (p or q)) -> ((not p) and (not q))'
+        zdanie = into_prefix(syntax_analysis(zdanie.split()), _dict)
+        wynik = parse(zdanie, _dict)
+        print(wynik.evaluate())
