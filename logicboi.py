@@ -154,8 +154,8 @@ def parse(sentence, var_dict):
 
 ############### __main__ ###############
 if __name__ == "__main__":
+    zdanie = input('Wprowadź zdanie: ').split()
     for _dict in [{'p':False,'q':True}, {'p':True,'q':True}, {'p':False,'q':False}, {'p':True,'q':False}]:
-        zdanie = '(not (p or q)) -> ((not p) and (not q))'
-        zdanie = into_prefix(syntax_analysis(zdanie.split()), _dict)
-        wynik = parse(zdanie, _dict)
-        print(wynik.evaluate())
+        zdanienew = into_prefix(syntax_analysis(zdanie), _dict)
+        wynik = parse(zdanienew, _dict)
+        print('p:',_dict['p'],'q:',_dict['q'],'val:',wynik.evaluate())
