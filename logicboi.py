@@ -53,6 +53,19 @@ class Sentence(object):
                 lambda x, y: x[y.evaluate()], self.args, self.truth_table)
         return self.value
 
+def gen_values(variables):
+    var_list = list(variables)
+    if len(var_list)==0:
+        return [dict()]
+    rec = gen_values(var_list[1:])
+    trued = rec[:]
+    falsed = rec[:]
+    for i in trued:
+        i[var_list[0]]=True
+    for i in falsed:
+        i[var_list[0]]=False
+    return trued.extend(falsed)
+
 ###
 # Functor definitions
 ###
@@ -82,7 +95,7 @@ class Implication(Sentence):
 
 TREE_DICT = {'and': Conjunction, 'or': Alternative, 'not': Negation, 'imp': Implication}
 
-############### Low-Level Front End ###############
+############### Sentence Parsing ###############
 
 SYNTAX_DICT = {'oraz':'and', '&':'and', 
                'lub':'or', '+':'or', 
@@ -101,16 +114,6 @@ def cut(sentence, val):
         left[0] = left[0].replace("(","", 1)
         left[-1] = left[-1].replace(")","", 1)
     return left, right
-
-def strip_options(command):
-    option_pattern = re.compile(r'^[-]{2}.+')
-    main_command, sentence = command
-    options = []
-    for word in sentence[:]:
-        if option_pattern.match(word):
-            sentence.pop(word)
-            options.append(word)
-    return main_command, options, sentence
 
 def syntax_analysis(sentence):
     ''' Converts functors into a standarized notation'''
@@ -153,10 +156,31 @@ def parse(sentence, var_dict):
     
     return _recurparse(sentence, var_dict)[0]
 
+############### Front-End ###############
+
+def strip_options(command):
+    option_pattern = re.compile(r'^[-]{2}.+')
+    main_command, sentence = command
+    options = []
+    for word in sentence[:]:
+        if option_pattern.match(word):
+            sentence.pop(word)
+            options.append(word)
+    return main_command, sentence, options
+
 ############### __main__ ###############
 if __name__ == "__main__":
-    zdanie = input('Wprowadź zdanie: ').split()
-    for _dict in [{'p':False,'q':True}, {'p':True,'q':True}, {'p':False,'q':False}, {'p':True,'q':False}]:
-        zdanienew = into_prefix(syntax_analysis(zdanie), _dict)
-        wynik = parse(zdanienew, _dict)
-        print('p:',_dict['p'],'q:',_dict['q'],'val:',wynik.evaluate())
+    what_do = strip_options(command)
+    if what_do[0]=='tautotest':
+        args = {}
+        sent = syntax_analysis(what_do[1])
+        for i in [j.replace("(","").replace(")","") for j in sent]:
+            if not i in TREE_DICT.keys():
+                args.update(i)
+
+        for _dict in gen_values(args):
+            zdanienew = into_prefix(sent, _dict)
+            wynik = parse(zdanienew, _dict)
+
+    else:
+        print('Not found')
