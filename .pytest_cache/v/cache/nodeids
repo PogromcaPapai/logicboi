@@ -1,4 +1,5 @@
 [
+  "analysis_test.py::TestTXT::test_all",
   "functors_test.py::TestNegation::test_true",
   "functors_test.py::TestNegation::test_false",
   "functors_test.py::TestNegation::test_additional",

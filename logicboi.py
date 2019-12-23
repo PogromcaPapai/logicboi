@@ -22,7 +22,7 @@ class Sentence(object):
         super().__init__()
         self.string = string
         self.value = value
-        new_args = self.clear_args(args)
+        new_args = self.clean_args(args)
         if not self.arg_number == len(new_args):
             raise TypeError(
                 "This amount of arguments is not allowed here")
@@ -35,7 +35,7 @@ class Sentence(object):
         return self.string
 
     @staticmethod
-    def clear_args(args):
+    def clean_args(args):
         new = []
         for i in args:
             if i!=None:
@@ -90,6 +90,7 @@ SYNTAX_DICT = {'oraz':'and', '&':'and',
                '->':'imp', '>':'imp'}
 
 def cut(sentence, val):
+    ''' Used in `into_prefix`, returns arguments of an infix functor '''
     ### RIGHT ###
     right = sentence[val+1:]
     right[0] = right[0].replace("(","", 1)
@@ -112,6 +113,7 @@ def strip_options(command):
     return main_command, options, sentence
 
 def syntax_analysis(sentence):
+    ''' Converts functors into a standarized notation'''
     new = []
     for i in sentence:
         for j in SYNTAX_DICT.keys():
@@ -137,19 +139,18 @@ def into_prefix(sentence, value_list, infix_functors = ['and','or','imp'], prefi
                 return [sentence[i]]+right
     return sentence
 
-def _recurparse(sentence, var_dict):
-    ''' 
-        USE `parse` INSTEAD OF THIS'''
-    symbol = TREE_DICT.get(sentence[0], Sentence)
-    args = []
-    new_sentence = sentence[1:]
-    name = " ".join(sentence)
-    for i in range(symbol.arg_number):
-        arg, new_sentence = _recurparse(new_sentence, var_dict)
-        args.append(arg)
-    return symbol(name, var_dict.get(sentence[0], None), *args), new_sentence
-
 def parse(sentence, var_dict):
+    ''' Parses `sentence` into a tree`; `sentence` needs to be in prefix notation'''
+    def _recurparse(sentence, var_dict):
+        symbol = TREE_DICT.get(sentence[0], Sentence)
+        args = []
+        new_sentence = sentence[1:]
+        name = " ".join(sentence)
+        for i in range(symbol.arg_number):
+            arg, new_sentence = _recurparse(new_sentence, var_dict)
+            args.append(arg)
+        return symbol(name, var_dict.get(sentence[0], None), *args), new_sentence
+    
     return _recurparse(sentence, var_dict)[0]
 
 ############### __main__ ###############
