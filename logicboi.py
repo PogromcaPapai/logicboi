@@ -170,21 +170,21 @@ def strip_options(command):
         if option_pattern.match(word):
             sentence.remove(word)
             options.append(word)
-    return [main_command, sentence[0].split(), options]
+    assert len(sentence)<=1, "Command not recognized: "+sentence
+    if len(sentence)==0:
+        ############|Write your sentence here for constant debuging
+        string_sent = ""
+        ############|----------------------------------------------
+        if string_sent=="":
+            string_sent = input("Podaj zdanie: ")
+    else:
+        string_sent = sentence[0]
+    return [main_command, string_sent.split(), options]
 
 ############### __main__ ###############
 if __name__ == "__main__":
     what_do = strip_options(command)
-    # Debug stuff
-    if '--debug' in what_do[2]:
-        #############|Write your sentence here for constant debuging
-        strto_debug = ""
-        #############|----------------------------------------------
-        if strto_debug=="":
-            strto_debug = input("Podaj zdanie: ")
-        to_debug = strto_debug.split()
-        what_do[1] = to_debug
-    
+
     # Option searching
     if what_do[0]=='tautotest':
         args = set()
