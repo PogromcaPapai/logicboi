@@ -17,7 +17,7 @@ Bada tautologiczność zdań; operuje w ramach KRZ
 ## Komendy:
  - `logicboi help` - wyświetla pomoc #TODO
  - `logicboi tautotest` - sprawdza tautologiczność zdań
- - `logicboi contrtest` - sprawdza kontrtautologiczność zdań #TODO
+ - `logicboi contrtest` - sprawdza kontrtautologiczność zdań
  - `logicboi check` - sprawdza prawdziwość zdania dla danych argumentów, wymagane `--with` #TODO
 
 ## Opcje uruchamiania:

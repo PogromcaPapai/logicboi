@@ -200,5 +200,19 @@ if __name__ == "__main__":
             tree = parse(zdanienew, _dict)
             solution &= tree.evaluate()
         print("It's "+(not solution)*"not "+"a tautology")
+    elif what_do[0]=='contrtest':
+        args = set()
+        sent = syntax_analysis(what_do[1])
+        nobrackets = [j.replace("(","").replace(")","") for j in sent]
+        for i in nobrackets:
+            if not i in TREE_DICT.keys():
+                args.update(i)
+
+        solution = True
+        for _dict in gen_values(args):
+            zdanienew = into_prefix(sent, _dict)
+            tree = parse(zdanienew, _dict)
+            solution &= not tree.evaluate()
+        print("It's "+(not solution)*"not "+"a contrtautology")
     else:
         print('Operation not found, consult with the readme')
