@@ -1,7 +1,9 @@
 from functools import reduce
 import re
 from sys import argv as command
+import os
 import logging
+from copy import deepcopy
 
 ############### Back End ###############
 
@@ -58,13 +60,14 @@ def gen_values(variables):
     if len(var_list)==0:
         return [dict()]
     rec = gen_values(var_list[1:])
-    trued = rec[:]
-    falsed = rec[:]
+    trued = deepcopy(rec)
+    falsed = deepcopy(rec)
     for i in trued:
         i[var_list[0]]=True
     for i in falsed:
         i[var_list[0]]=False
-    return trued.extend(falsed)
+    new = trued + falsed
+    return new
 
 ###
 # Functor definitions
@@ -159,28 +162,43 @@ def parse(sentence, var_dict):
 ############### Front-End ###############
 
 def strip_options(command):
+    command_list = list(command[1:])
     option_pattern = re.compile(r'^[-]{2}.+')
-    main_command, sentence = command
+    main_command, *sentence = command_list
     options = []
     for word in sentence[:]:
         if option_pattern.match(word):
-            sentence.pop(word)
+            sentence.remove(word)
             options.append(word)
-    return main_command, sentence, options
+    return [main_command, sentence[0].split(), options]
 
 ############### __main__ ###############
 if __name__ == "__main__":
     what_do = strip_options(command)
+    # Debug stuff
+    if '--debug' in what_do[2]:
+        #############|Write your sentence here for constant debuging
+        strto_debug = ""
+        #############|----------------------------------------------
+        if strto_debug=="":
+            strto_debug = input("Podaj zdanie: ")
+        to_debug = strto_debug.split()
+        what_do[1] = to_debug
+    
+    # Option searching
     if what_do[0]=='tautotest':
-        args = {}
+        args = set()
         sent = syntax_analysis(what_do[1])
-        for i in [j.replace("(","").replace(")","") for j in sent]:
+        nobrackets = [j.replace("(","").replace(")","") for j in sent]
+        for i in nobrackets:
             if not i in TREE_DICT.keys():
                 args.update(i)
 
+        solution = True
         for _dict in gen_values(args):
             zdanienew = into_prefix(sent, _dict)
-            wynik = parse(zdanienew, _dict)
-
+            tree = parse(zdanienew, _dict)
+            solution &= tree.evaluate()
+        print("It's "+(not solution)*"not "+"a tautology")
     else:
-        print('Not found')
+        print('Operation not found, consult with the readme')

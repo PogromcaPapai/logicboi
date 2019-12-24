@@ -1,2 +1,3 @@
 (not (p or q)) -> ((not p) and (not q));1
 (p -> q) or (q -> p);1
+(p -> q) -> (q -> p);0
