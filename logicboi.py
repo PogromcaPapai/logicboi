@@ -1,7 +1,9 @@
 from functools import reduce
 import re
 from sys import argv as command
+import os
 import logging
+from copy import deepcopy
 
 ############### Back End ###############
 
@@ -22,7 +24,7 @@ class Sentence(object):
         super().__init__()
         self.string = string
         self.value = value
-        new_args = self.clear_args(args)
+        new_args = self.clean_args(args)
         if not self.arg_number == len(new_args):
             raise TypeError(
                 "This amount of arguments is not allowed here")
@@ -35,7 +37,7 @@ class Sentence(object):
         return self.string
 
     @staticmethod
-    def clear_args(args):
+    def clean_args(args):
         new = []
         for i in args:
             if i!=None:
@@ -52,6 +54,20 @@ class Sentence(object):
             self.value = reduce(
                 lambda x, y: x[y.evaluate()], self.args, self.truth_table)
         return self.value
+
+def gen_values(variables):
+    var_list = list(variables)
+    if len(var_list)==0:
+        return [dict()]
+    rec = gen_values(var_list[1:])
+    trued = deepcopy(rec)
+    falsed = deepcopy(rec)
+    for i in trued:
+        i[var_list[0]]=True
+    for i in falsed:
+        i[var_list[0]]=False
+    new = trued + falsed
+    return new
 
 ###
 # Functor definitions
@@ -82,7 +98,7 @@ class Implication(Sentence):
 
 TREE_DICT = {'and': Conjunction, 'or': Alternative, 'not': Negation, 'imp': Implication}
 
-############### Low-Level Front End ###############
+############### Sentence Parsing ###############
 
 SYNTAX_DICT = {'oraz':'and', '&':'and', 
                'lub':'or', '+':'or', 
@@ -90,6 +106,7 @@ SYNTAX_DICT = {'oraz':'and', '&':'and',
                '->':'imp', '>':'imp'}
 
 def cut(sentence, val):
+    ''' Used in `into_prefix`, returns arguments of an infix functor '''
     ### RIGHT ###
     right = sentence[val+1:]
     right[0] = right[0].replace("(","", 1)
@@ -101,17 +118,8 @@ def cut(sentence, val):
         left[-1] = left[-1].replace(")","", 1)
     return left, right
 
-def strip_options(command):
-    option_pattern = re.compile(r'^[-]{2}.+')
-    main_command, sentence = command
-    options = []
-    for word in sentence[:]:
-        if option_pattern.match(word):
-            sentence.pop(word)
-            options.append(word)
-    return main_command, options, sentence
-
 def syntax_analysis(sentence):
+    ''' Converts functors into a standarized notation'''
     new = []
     for i in sentence:
         for j in SYNTAX_DICT.keys():
@@ -137,25 +145,74 @@ def into_prefix(sentence, value_list, infix_functors = ['and','or','imp'], prefi
                 return [sentence[i]]+right
     return sentence
 
-def _recurparse(sentence, var_dict):
-    ''' 
-        USE `parse` INSTEAD OF THIS'''
-    symbol = TREE_DICT.get(sentence[0], Sentence)
-    args = []
-    new_sentence = sentence[1:]
-    name = " ".join(sentence)
-    for i in range(symbol.arg_number):
-        arg, new_sentence = _recurparse(new_sentence, var_dict)
-        args.append(arg)
-    return symbol(name, var_dict.get(sentence[0], None), *args), new_sentence
-
 def parse(sentence, var_dict):
+    ''' Parses `sentence` into a tree`; `sentence` needs to be in prefix notation'''
+    def _recurparse(sentence, var_dict):
+        symbol = TREE_DICT.get(sentence[0], Sentence)
+        args = []
+        new_sentence = sentence[1:]
+        name = " ".join(sentence)
+        for i in range(symbol.arg_number):
+            arg, new_sentence = _recurparse(new_sentence, var_dict)
+            args.append(arg)
+        return symbol(name, var_dict.get(sentence[0], None), *args), new_sentence
+    
     return _recurparse(sentence, var_dict)[0]
+
+############### Front-End ###############
+
+def strip_options(command):
+    command_list = list(command[1:])
+    option_pattern = re.compile(r'^[-]{2}.+')
+    main_command, *sentence = command_list
+    options = []
+    for word in sentence[:]:
+        if option_pattern.match(word):
+            sentence.remove(word)
+            options.append(word)
+    assert len(sentence)<=1, "Command not recognized: "+sentence
+    if len(sentence)==0:
+        ############|Write your sentence here for constant debuging
+        string_sent = ""
+        ############|----------------------------------------------
+        if string_sent=="":
+            string_sent = input("Podaj zdanie: ")
+    else:
+        string_sent = sentence[0]
+    return [main_command, string_sent.split(), options]
 
 ############### __main__ ###############
 if __name__ == "__main__":
-    zdanie = input('Wprowadź zdanie: ').split()
-    for _dict in [{'p':False,'q':True}, {'p':True,'q':True}, {'p':False,'q':False}, {'p':True,'q':False}]:
-        zdanienew = into_prefix(syntax_analysis(zdanie), _dict)
-        wynik = parse(zdanienew, _dict)
-        print('p:',_dict['p'],'q:',_dict['q'],'val:',wynik.evaluate())
+    what_do = strip_options(command)
+
+    # Option searching
+    if what_do[0]=='tautotest':
+        args = set()
+        sent = syntax_analysis(what_do[1])
+        nobrackets = [j.replace("(","").replace(")","") for j in sent]
+        for i in nobrackets:
+            if not i in TREE_DICT.keys():
+                args.update(i)
+
+        solution = True
+        for _dict in gen_values(args):
+            zdanienew = into_prefix(sent, _dict)
+            tree = parse(zdanienew, _dict)
+            solution &= tree.evaluate()
+        print("It's "+(not solution)*"not "+"a tautology")
+    elif what_do[0]=='contrtest':
+        args = set()
+        sent = syntax_analysis(what_do[1])
+        nobrackets = [j.replace("(","").replace(")","") for j in sent]
+        for i in nobrackets:
+            if not i in TREE_DICT.keys():
+                args.update(i)
+
+        solution = True
+        for _dict in gen_values(args):
+            zdanienew = into_prefix(sent, _dict)
+            tree = parse(zdanienew, _dict)
+            solution &= not tree.evaluate()
+        print("It's "+(not solution)*"not "+"a contrtautology")
+    else:
+        print('Operation not found, consult with the readme')

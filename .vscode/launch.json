@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug: tautotest",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["tautotest", "--debug"]
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
