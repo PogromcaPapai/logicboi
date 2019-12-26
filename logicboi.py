@@ -1,12 +1,18 @@
 from functools import reduce
-import re
+import regex
 from sys import argv as command
 import os
-import logging
 from copy import deepcopy
+
+def get_key(my_dict, val): 
+    ''' Gets key for a value '''
+    for key, value in my_dict.items(): 
+        if val == value: 
+            return key 
 
 ############### Back End ###############
 
+#### Tabular method ####
 
 class Sentence(object):
     truth_table = dict()
@@ -98,12 +104,72 @@ class Implication(Sentence):
 
 TREE_DICT = {'and': Conjunction, 'or': Alternative, 'not': Negation, 'imp': Implication}
 
+#### CNF ####
+
+def encode(_list, arg_dict):
+    SYNTAX_DICT = {'and':'a','or':'v','not':'n','imp':'vn'}
+    
+    SYNTAX_DICT.update(arg_dict)
+    string = ''
+    for i in _list:
+        string += SYNTAX_DICT[i]
+    return string
+
+def reduce_negations(string):
+    return string.replace("nn","")
+
+def reduce_functors(string):
+    return string
+
+def internalize_alternatives(string):
+    new = regex.sub(r'va(n?\d|(?>[va](?1)(?1)))((?1))((?1))',r'av\1\3v\2\3' , string)
+    new = regex.sub(r'v(n?\d|(?>[va](?1)(?1)))a((?1))((?1))',r'av\1\2v\1\3' , new)
+    return new
+
+def de_morgan(string):
+    new = regex.sub(r'na(n?\d|(?>[va](?1)(?1)))((?1))',r'vn\1n\2' , string)
+    new = regex.sub(r'nv(n?\d|(?>[va](?1)(?1)))((?1))',r'an\1n\2' , new)
+    return new
+
+def is_end(sentence):
+    matched = regex.fullmatch(r'(a((?1)(?1)|(?1)(?3)|(?3)(?1)|(?3)(?3)))|((v((?3)(?3)|(?3)n?\d|n?\d(?3)|n?\dn?\d))|n?\d)', sentence)
+    return matched != None
+
+def decode(string, arg_dict):
+    SYNTAX_DICT = {'and':'a','or':'v','not':'n'}
+    
+    SYNTAX_DICT.update(arg_dict)
+    new = []
+    for i in string:
+        new.append(get_key(SYNTAX_DICT, i))
+    return new
+
+def getresolution_list(list_string, args):
+    new = []
+    insert = set()
+    or_count = 1
+    negate = False
+    for i in list_string:
+        if i == 'or':
+            or_count += 1
+        elif i == 'and':
+            pass
+        elif i == 'not':
+            negate = True
+        elif i in args:
+            or_count -= 1
+            insert.add(negate*'~'+i)
+            negate = False
+            if or_count==0:
+                new.append(insert)
+                insert = set()
+                or_count = 1
+        else:
+            raise Exception(f'Couldn\'t parse: {i}')
+    return new
+
 ############### Sentence Parsing ###############
 
-SYNTAX_DICT = {'oraz':'and', '&':'and', 
-               'lub':'or', '+':'or', 
-               '~':'not', 
-               '->':'imp', '>':'imp'}
 
 def cut(sentence, val):
     ''' Used in `into_prefix`, returns arguments of an infix functor '''
@@ -120,6 +186,11 @@ def cut(sentence, val):
 
 def syntax_analysis(sentence):
     ''' Converts functors into a standarized notation'''
+    SYNTAX_DICT = {'oraz':'and', '&':'and', 
+               'lub':'or', '+':'or', 
+               '~':'not', 
+               '->':'imp', '>':'imp'}
+
     new = []
     for i in sentence:
         for j in SYNTAX_DICT.keys():
@@ -127,7 +198,7 @@ def syntax_analysis(sentence):
         new.append(i)
     return new
 
-def into_prefix(sentence, value_list, infix_functors = ['and','or','imp'], prefix_functors = ['not']):
+def into_prefix(sentence, infix_functors = ['and','or','imp'], prefix_functors = ['not']):
     ''' Converts the sentence (list of words) into a prefix notation '''
     brackets = 0
     for i in range(len(sentence)):
@@ -136,12 +207,12 @@ def into_prefix(sentence, value_list, infix_functors = ['and','or','imp'], prefi
             assert brackets >= 0, "Brackets not opened"
             if sentence[i] in infix_functors and brackets==0:
                 new = cut(sentence, i)
-                right = into_prefix(new[1], value_list, infix_functors = infix_functors)
-                left = into_prefix(new[0], value_list, infix_functors = infix_functors)
+                right = into_prefix(new[1], infix_functors = infix_functors)
+                left = into_prefix(new[0], infix_functors = infix_functors)
                 return [sentence[i]]+left+right
             elif sentence[i] in prefix_functors and brackets==0:
                 new = cut(sentence, 0)
-                right = into_prefix(new[1], value_list, prefix_functors = prefix_functors)
+                right = into_prefix(new[1], prefix_functors = prefix_functors)
                 return [sentence[i]]+right
     return sentence
 
@@ -163,7 +234,7 @@ def parse(sentence, var_dict):
 
 def strip_options(command):
     command_list = list(command[1:])
-    option_pattern = re.compile(r'^[-]{2}.+')
+    option_pattern = regex.compile(r'^[-]{2}.+')
     main_command, *sentence = command_list
     options = []
     for word in sentence[:]:
@@ -196,7 +267,7 @@ if __name__ == "__main__":
 
         solution = True
         for _dict in gen_values(args):
-            zdanienew = into_prefix(sent, _dict)
+            zdanienew = into_prefix(sent)
             tree = parse(zdanienew, _dict)
             solution &= tree.evaluate()
         print("It's "+(not solution)*"not "+"a tautology")
@@ -210,9 +281,33 @@ if __name__ == "__main__":
 
         solution = True
         for _dict in gen_values(args):
-            zdanienew = into_prefix(sent, _dict)
+            zdanienew = into_prefix(sent)
             tree = parse(zdanienew, _dict)
             solution &= not tree.evaluate()
         print("It's "+(not solution)*"not "+"a contrtautology")
+    elif what_do[0]=='cnf':
+        args = dict()
+        sent = syntax_analysis(what_do[1])
+        nobrackets = [j.replace("(","").replace(")","") for j in sent]
+        j = 0
+        for i in nobrackets:
+            if not (i in TREE_DICT.keys() or i in args.keys()):
+                args[i] = str(j)
+                j += 1
+        assert j<10, "Maksymalna liczba zmiennych zdaniowych to 10"
+        zdanienew = into_prefix(sent)
+        ready4cnf = encode(zdanienew, args)
+        
+        # Solving
+        cnf = reduce_functors(ready4cnf[:])
+        while not is_end(cnf):
+            cnf = reduce_negations(cnf)
+            cnf = de_morgan(cnf)
+            cnf = internalize_alternatives(cnf)
+            print(cnf)
+        finished = decode(cnf, args)
+        print(finished)
+        print(getresolution_list(finished, args.keys()))
+
     else:
         print('Operation not found, consult with the readme')

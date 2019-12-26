@@ -13,6 +13,14 @@
             "args": ["tautotest", "--debug"]
         },
         {
+            "name": "Debug: cnf",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["cnf", "--debug"]
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
