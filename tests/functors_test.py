@@ -1,4 +1,4 @@
-import logicboi
+import logicboi.tree as logicboi
 import pytest
 
 def basetest(model_class, tested_function, *values):

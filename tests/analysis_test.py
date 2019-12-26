@@ -1,3 +1,4 @@
+import logicboi.tree as tree
 import logicboi
 import pytest
 
@@ -14,6 +15,6 @@ class TestTXT:
                 calculated = True
                 for _dict in [{'p':False,'q':True}, {'p':True,'q':True}, {'p':False,'q':False}, {'p':True,'q':False}]:
                     zdanienew = logicboi.into_prefix(logicboi.syntax_analysis(sent_split), _dict)
-                    wynik = logicboi.parse(zdanienew, _dict)
+                    wynik = tree.parse(zdanienew, _dict)
                     calculated &= wynik.evaluate()
                 assert calculated == val
