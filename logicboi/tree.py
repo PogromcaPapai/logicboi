@@ -65,6 +65,7 @@ def gen_values(variables):
     new = trued + falsed
     return new
 
+
 ###
 # Functor definitions
 ###
@@ -91,8 +92,8 @@ class Implication(Sentence):
                    False: {False: True, True: True}}
     arg_number = 2
 
-
 TREE_DICT = {'and': Conjunction, 'or': Alternative, 'not': Negation, 'imp': Implication}
+TREE_LIST = TREE_DICT.keys()
 
 ############### Sentence Parsing ###############
 
