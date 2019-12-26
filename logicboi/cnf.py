@@ -1,5 +1,5 @@
 import regex
-from .__init__ import syntax_analysis, into_prefix
+from .__main__ import syntax_analysis, into_prefix
 
 def get_key(my_dict, val): 
     ''' Gets key for a value '''
