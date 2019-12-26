@@ -1,10 +1,10 @@
 import logicboi.tree as tree
-import logicboi
+from logicboi.__main__ import into_prefix, syntax_analysis
 import pytest
 
 class TestTXT:
     def test_all(self):
-        with open('formulas to test.txt', "r") as text:
+        with open('tests/formulas to test.txt', "r") as text:
             while True:
                 line = text.readline()
                 if line=="":
@@ -14,7 +14,7 @@ class TestTXT:
                 sent_split = sent.split()
                 calculated = True
                 for _dict in [{'p':False,'q':True}, {'p':True,'q':True}, {'p':False,'q':False}, {'p':True,'q':False}]:
-                    zdanienew = logicboi.into_prefix(logicboi.syntax_analysis(sent_split), _dict)
+                    zdanienew = into_prefix(syntax_analysis(sent_split), _dict)
                     wynik = tree.parse(zdanienew, _dict)
                     calculated &= wynik.evaluate()
                 assert calculated == val
