@@ -1,8 +1,7 @@
-from functools import reduce
 from copy import deepcopy
+from functools import reduce
 
-
-############### Back End ###############
+#### Back-End ####
 
 class Sentence(object):
     truth_table = dict()
@@ -65,7 +64,6 @@ def gen_values(variables):
     new = trued + falsed
     return new
 
-
 ###
 # Functor definitions
 ###
@@ -92,10 +90,10 @@ class Implication(Sentence):
                    False: {False: True, True: True}}
     arg_number = 2
 
-TREE_DICT = {'and': Conjunction, 'or': Alternative, 'not': Negation, 'imp': Implication}
-TREE_LIST = TREE_DICT.keys()
 
-############### Sentence Parsing ###############
+TREE_DICT = {'and': Conjunction, 'or': Alternative, 'not': Negation, 'imp': Implication}
+
+#### Front-End ####
 
 def parse(sentence, var_dict):
     ''' Parses `sentence` into a tree`; `sentence` needs to be in prefix notation'''
@@ -110,8 +108,3 @@ def parse(sentence, var_dict):
         return symbol(name, var_dict.get(sentence[0], None), *args), new_sentence
     
     return _recurparse(sentence, var_dict)[0]
-
-def build4values(sentence, _dict):
-    tree = parse(sentence, _dict)
-    return tree.evaluate()
-
