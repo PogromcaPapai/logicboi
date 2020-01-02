@@ -61,7 +61,7 @@ if __name__ == "__main__":
             cnfstring = cnf.de_morgan(cnf)
             cnfstring = cnf.internalize_alternatives(cnf)
             print(cnfstring)
-        finished = cnf.decode(cnfstring, args)
+        finished = cnfstring.decode(cnfstring, args)
         print(cnf.getresolution_list(finished, args.keys()))
 
     else:

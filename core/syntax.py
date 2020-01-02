@@ -32,7 +32,6 @@ def into_prefix(sentence, infix_functors = ['and','or','imp'], prefix_functors =
     brackets = 0
     for i in range(len(sentence)):
             brackets += sentence[i].count("(")
-            brackets -= sentence[i].count(")")
             assert brackets >= 0, "Brackets not opened"
             if sentence[i] in infix_functors and brackets==0:
                 new = cut(sentence, i)
@@ -43,6 +42,7 @@ def into_prefix(sentence, infix_functors = ['and','or','imp'], prefix_functors =
                 new = cut(sentence, 0)
                 right = into_prefix(new[1], prefix_functors = prefix_functors)
                 return [sentence[i]]+right
+            brackets -= sentence[i].count(")")
     return sentence
 
 def strip_options(command):
