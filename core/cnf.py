@@ -71,3 +71,10 @@ def getresolution_list(list_string, args):
         else:
             raise Exception(f'Couldn\'t parse: {i}')
     return new
+
+def sortval(alternative):
+    if '~' in alternative:
+        new = int(''.join(str(ord(c)) for c in alternative[1:])+'1')
+    else:
+        new = int(''.join(str(ord(c)) for c in alternative)+'0')
+    return new

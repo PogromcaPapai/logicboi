@@ -63,4 +63,4 @@ def strip_options(command):
             string_sent = input("Podaj zdanie: ")
     else:
         string_sent = sentence[0]
-    return [main_command, string_sent.split(), options]
+    return {'main':main_command, 'string':string_sent.split(), 'options':options}
